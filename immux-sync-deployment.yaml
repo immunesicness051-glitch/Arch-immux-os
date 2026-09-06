@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immux-config-sync-engine
+  namespace: immux-system
+  labels:
+    app: immux-synchronizer
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: immux-synchronizer
+  template:
+    metadata:
+      labels:
+        app: immux-synchronizer
+    spec:
+      containers:
+      - name: sync-runtime-agent
+        image: alpine:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            apk add --no-cache rsync openssh-client git;
+            echo "[*] Initializing automated infrastructure synchronization loops...";
+            while true; do
+              # Run synchronization verification loop scripts dynamically here
+              sleep 60;
+            done
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 10001
+          capabilities:
+            drop:
+              - ALL
+        volumeMounts:
+        - name: transient-bridge-storage
+          mountPath: /dev/shm
+        - name: static-config-volume
+          mountPath: /etc/immux/configs
+          readOnly: true
+      volumes:
+      - name: transient-bridge-storage
+        emptyDir:
+          medium: Memory # Maps memory segment directly to RAM allocations for clean wiping
+      - name: static-config-volume
+        configMap:
+          name: immux-baseline-profiles
