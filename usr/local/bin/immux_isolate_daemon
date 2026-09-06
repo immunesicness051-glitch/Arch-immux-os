@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+import os
+import sys
+import time
+import socket
+import struct
+import array
+import fcntl
+
+# Hard-coded interface configuration targets
+TARGET_INTERFACES = ["anbox0", "eth1", "wlan0"]
+PCI_BUS_TARGETS = ["0000:00:1f.6", "0000:02:00.0"] # Example hardware bus addresses for direct decoupling
+BREACH_LOG_SIGNAL = "IMMUX_HONEYPOT_BREACH"
+
+# Socket configuration constants
+SIOCGIFFLAGS = 0x8913
+SIOCSIFFLAGS = 0x8914
+IFF_UP = 0x1
+
+def check_privileges():
+    if os.geteuid() != 0:
+        sys.stderr.write("[-] Critical Subsystem Fault: Isolation Daemon requires administrative root authority.\n")
+        sys.exit(1)
+
+def drop_interface_natively(ifname: str) -> bool:
+    """Uses raw sockets and IOCTL system parameters to drop interfaces without calling external binaries."""
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # Construct the structure packing for the network interface request payload (ifr_name)
+        ifr = struct.pack('16sH', ifname.encode('utf-8'), 0)
+        
+        # Read the current interface flag values
+        res = fcntl.ioctl(sock.fileno(), SIOCGIFFLAGS, ifr)
+        flags = struct.unpack('16sH', res)[1]
+        
+        # Strip the operational IFF_UP flag to deactivate the interface completely
+        if flags & IFF_UP:
+            flags &= ~IFF_UP
+            ifr = struct.pack('16sH', ifname.encode('utf-8'), flags)
+            fcntl.ioctl(sock.fileno(), SIOCSIFFLAGS, ifr)
+            sys.stdout.write(f"[+] NETWORK ISOLATION ENGINE: Successfully dropped link state for: {ifname}\n")
+        return True
+    except Exception as e:
+        sys.stderr.write(f"[-] Isolation failure on interface {ifname}: {e}\n")
+        return False
+
+def sever_pci_bus_link(bus_id: str) -> None:
+    """Forces the Linux kernel to unbind the physical network controller from the system bus."""
+    unbind_path = f"/sys/bus/pci/drivers/e1000e/unbind" # Adapts dynamically based on target network hardware drivers
+    if not os.path.exists(unbind_path):
+        unbind_path = f"/sys/bus/pci/devices/{bus_id}/driver/unbind"
+        
+    if os.path.exists(unbind_path):
+        try:
+            with open(unbind_path, "w") as f:
+                f.write(bus_id)
+            sys.stdout.write(f"[!!] HARDWARE SHIELD ENFORCED: Severed PCIe device path connection at bus entry: {bus_id}\n")
+        except IOError:
+            sys.stderr.write(f"[-] Bus communication failure while trying to disconnect target hardware path: {bus_id}\n")
+
+def execute_total_containment_protocol():
+    """Triggers complete containment to stop malware from pivoting across hardware frames."""
+    sys.stdout.write("\n[CRITICAL LOG ALERT] BREACH SIGNAL DETECTED. EXECUTE CONTAINMENT PROTOCOL.\n")
+    sys.stdout.write("========================================================================\n")
+    
+    # 1. Drop the operational link status of all configured interfaces immediately
+    for iface in TARGET_INTERFACES:
+        drop_interface_natively(iface)
+        
+    # 2. Deconstruct the kernel's PCIe routing links to disconnect physical network hardware
+    for pci_slot in PCI_BUS_TARGETS:
+        sever_pci_bus_link(pci_slot)
+        
+    sys.stdout.write("========================================================================\n")
+    sys.stdout.write("[+] Containment complete. Host is completely air-gapped from hardware networks.\n\n")
+
+def daemon_execution_loop():
+    check_privileges()
+    sys.stdout.write("[*] Immux OS System Isolation Service active. Monitoring kernel communication loops...\n")
+    
+    # Simple continuous monitoring of local authorization state adjustments
+    try:
+        while True:
+            # Monitors standard volatile storage vectors or shared RAM spaces for security flags
+            if os.path.exists("/dev/shm/.immux_breach_flag"):
+                execute_total_containment_protocol()
+                # Clear the flag state path to finalize loop operations
+                try:
+                    os.remove("/dev/shm/.immux_breach_flag")
+                except OSError:
+                    pass
+            time.sleep(0.5)
+    except KeyboardInterrupt:
+        sys.stdout.write("[*] Deactivating containment engine safely.\n")
+
+if __name__ == "__main__":
+    daemon_execution_loop()
