@@ -1,0 +1,13 @@
+def configure_subsystems(self):
+    if self.is_termux:
+        self.setup_headless_bridge(driver="zink")
+    elif self.arch == "x86_64":
+        if os.path.exists("/dev/kvm"):
+            self.launch_kvm_subsystem(target="winboat")
+        else:
+            self.log_fallback("kvm_unavailable", target="winboat")
+        self.route_wayland_socket(target="waydroid")
+    elif self.arch == "aarch64":
+        self.launch_lxc_container(target="waydroid")
+    else:
+        self.log_fallback("unsupported_arch", arch=self.arch)
