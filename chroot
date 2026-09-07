@@ -1,0 +1,15 @@
+arch-chroot /mnt
+
+# Set local clock and language constraints
+ln -sf /usr/share/zoneinfo/America/Phoenix /etc/localtime
+hwclock --systohc
+echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
+locale-gen
+echo "LANG=en_US.UTF-8" > /etc/locale.conf
+echo "immux-arch" > /etc/hostname
+
+# Force essential modules to load for Waydroid (binder/ashmem) and WinBoat (KVM)
+echo -e "kvm-intel\nkvm-amd\nbinder_linux\nashmem_linux" > /etc/modules-load.d/immux-virtualization.conf
+
+# Set system parameters for Binder nodes
+echo 'options binder_linux devices="binder,hwbinder,vndbinder"' > /etc/modprobe.d/waydroid.conf
