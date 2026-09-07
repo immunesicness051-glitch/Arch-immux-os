@@ -1,0 +1,25 @@
+# GRUB Psychedelic Aesthetic Theme Manifest
+desktop-image: "splash_psychedelic.png"
+desktop-color: "#0d0211"
+terminal-box: "terminal_box_*.png"
+terminal-font: "Terminus 14"
+
++ boot_menu {
+  left = 15%
+  top = 35%
+  width = 70%
+  height = 50%
+  item_font = "Terminus 12"
+  selected_item_font = "Terminus Bold 14"
+  item_color = "#8b5cf6"
+  selected_item_color = "#34d399"
+  item_spacing = 12
+}
+
++ label {
+  top = 85%
+  left = 15%
+  text = "Immux-OS Kernel Bootstrap Space // Secure deep root access verified."
+  color = "#ec4899"
+  font = "Terminus 10"
+}
