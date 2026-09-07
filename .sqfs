@@ -1,0 +1,17 @@
+# Partition your target disk (e.g., /dev/nvme0n1)
+# P1: EFI (1 GiB), P2: Immux_Root_A (System), P3: Immux_Persistent
+
+# Format the partitions
+mkfs.fat -F32 /dev/nvme0n1p1
+mkfs.btrfs -f -L IMMUX_SYS /dev/nvme0n1p2
+
+# Mount and create subvolumes for structural isolation
+mount /dev/nvme0n1p2 /mnt
+btrfs subvolume create /mnt/@arch_userland
+btrfs subvolume create /mnt/@snapshots
+umount /mnt
+
+# Mount with active zstd compression
+mount -o noatime,compress=zstd:3,subvol=@arch_userland /dev/nvme0n1p2 /mnt
+mkdir /mnt/boot
+mount /dev/nvme0n1p1 /mnt/boot
