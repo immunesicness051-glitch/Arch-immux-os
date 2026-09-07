@@ -1,2 +1,2 @@
-# Arch-immux-os
+# immux-os
 The hybrid desktop
