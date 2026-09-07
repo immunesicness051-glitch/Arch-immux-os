@@ -1,0 +1,2 @@
+# From outside the chroot / build host context:
+squashfs-tools mksquashfs /mnt/image/root_userland /tmp/immux_arch_layer.sqfs -comp zstd -Xcompression-level 19
