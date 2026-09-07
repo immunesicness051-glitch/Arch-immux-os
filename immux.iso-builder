@@ -1,0 +1,20 @@
+immux-iso-builder/
+│
+├── build_iso.py                # Python orchestration runner
+├── profiledef.sh               # Archiso metadata definitions
+│
+├── efi/
+│   └── EFI/
+│       └── BOOT/
+│           └── theme.txt       # GRUB psychedelic theme styling
+│
+├── airootfs/                   # The pre-baked target root space
+│   ├── etc/
+│   │   ├── plymouth/
+│   │   │   └── plymouthd.conf  # Splash screen management
+│   │   └── mkinitcpio.conf     # Kinetic hook definitions
+│   └── usr/
+│       └── share/
+│           └── plymouth/
+│               └── themes/
+│                   └── immux-psychedelic/
