@@ -1,0 +1,5 @@
+# Bootstrap basic Arch userland environment
+pacstrap -K /mnt base base-devel linux-hardened linux-hardened-headers btrfs-progs git neovim
+
+# Generate filesystem table
+genfstab -U /mnt >> /mnt/etc/fstab
